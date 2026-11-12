@@ -53,10 +53,10 @@ fun HistoryScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 10.dp)
             .testTag("history_screen"),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(top = 6.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 1. Header Title & Subtitle + CSV Export Button
         item {

@@ -132,7 +132,7 @@ fun AdvancedBarcodeScannerDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             color = DarkNavyBase,
             border = androidx.compose.foundation.BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
             modifier = Modifier
@@ -143,8 +143,8 @@ fun AdvancedBarcodeScannerDialog(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // ==========================================
                 // 1. Scanner Top Control Bar (SCAN, PAUSE, RESUME, FINISH)
@@ -252,10 +252,10 @@ fun AdvancedBarcodeScannerDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .height(112.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(DarkNavyCard)
-                            .border(1.dp, NeonCyan.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
+                            .border(1.dp, NeonCyan.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
                     ) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             val w = size.width

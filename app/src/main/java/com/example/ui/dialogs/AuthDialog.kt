@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,10 +31,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.auth.AuthDiagnosticVerdict
 import com.example.auth.FirebaseAuthService
 import com.example.data.WarehouseStrings
 import com.example.model.ActiveOperator
 import com.example.model.WarehouseOperatorProfile
+import com.example.ui.components.AuthDiagnosticsPanel
 import com.example.ui.components.TabularText
 import com.example.ui.components.minTouchTarget
 import com.example.ui.theme.*
@@ -44,86 +49,199 @@ fun AuthDialog(
     scope: CoroutineScope,
     isArabic: Boolean,
     currentFactoryId: String = "P7",
+    initialShowDiagnostics: Boolean = false,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val activity = context as? Activity
     val currentUser by authService.currentUser.collectAsState()
     val operatorProfile by authService.operatorProfile.collectAsState()
     val isLoading by authService.isLoading.collectAsState()
     val authError by authService.authError.collectAsState()
     val activeOperators by authService.activeOperators.collectAsState()
+    val diagnosticsReport by authService.diagnosticsReport.collectAsState()
 
+    var dialogMode by remember { mutableStateOf(if (initialShowDiagnostics) 1 else 0) } // 0: Auth/Operators, 1: Diagnostics
     var authTab by remember { mutableStateOf(0) } // 0: Sign In, 1: Register New
     var emailInput by remember { mutableStateOf("mishoelghabaz@gmail.com") }
     var passwordInput by remember { mutableStateOf("") }
     var displayNameInput by remember { mutableStateOf("") }
+    var copiedNotice by remember { mutableStateOf(false) }
 
-    // Start observing concurrent operators
+    // Start observing concurrent operators & refresh diagnostics on open
     LaunchedEffect(currentFactoryId) {
+        authService.runAuthDiagnostics(scope, forceTokenRefresh = false)
         authService.observeActiveOperators(currentFactoryId).collect { }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, NeonCyan.copy(alpha = 0.8f)),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, NeonCyan.copy(alpha = 0.7f)),
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.9f)
+                .heightIn(max = 680.dp)
                 .testTag("auth_dialog")
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(18.dp)
+                    .fillMaxWidth()
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Header Icon
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .background(NeonCyan.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
+                // Compact Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Security,
-                        contentDescription = "Auth",
-                        tint = NeonCyan,
-                        modifier = Modifier.size(26.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(NeonCyan.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Security,
+                                contentDescription = "Auth",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = if (isArabic) "بوابة المصادقة والتشخيص" else "Operator Auth & Diagnostics",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            val dotColor = when (diagnosticsReport.verdict) {
+                                AuthDiagnosticVerdict.ACTIVE_GMAIL_READY -> EmeraldGreen
+                                AuthDiagnosticVerdict.FIREBASE_EMAIL_ONLY -> NeonCyan
+                                AuthDiagnosticVerdict.PREVIEW_BYPASS_UNAUTHENTICATED -> AmberOrange
+                                AuthDiagnosticVerdict.AUTH_OR_ENV_FAILING -> CoralRed
+                            }
+                            Text(
+                                text = "${diagnosticsReport.verdict.name} • ${if (diagnosticsReport.isEmulator) "Emulator" else "Device"}",
+                                color = dotColor,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.minTouchTarget(40.dp).size(36.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextMuted, modifier = Modifier.size(18.dp))
+                    }
                 }
 
-                Text(
-                    text = if (isArabic) "تسجيل الدخول وإدارة المشغلين المتزامنين" else "Operator Authentication & Concurrency",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-
-                // Error Banner
-                if (authError != null) {
+                // Mode Switcher: Operator Auth vs Diagnostics Panel
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = CoralRed.copy(alpha = 0.15f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, CoralRed.copy(alpha = 0.6f)),
-                        modifier = Modifier.fillMaxWidth()
+                        color = if (dialogMode == 0) NeonCyan else Color.Transparent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { dialogMode = 0 }
+                            .testTag("auth_mode_login_tab")
                     ) {
                         Text(
-                            text = authError ?: "",
-                            color = CoralRed,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(10.dp)
+                            text = if (isArabic) "الحساب والمشغلون" else "Login & Operators",
+                            color = if (dialogMode == 0) DarkNavyBase else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 7.dp)
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (dialogMode == 1) AmberOrange else Color.Transparent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                dialogMode = 1
+                                authService.runAuthDiagnostics(scope, forceTokenRefresh = true)
+                            }
+                            .testTag("auth_mode_diagnostics_tab")
+                    ) {
+                        Text(
+                            text = if (isArabic) "تشخيص Gmail والتوكن" else "Auth/Gmail Diagnostics",
+                            color = if (dialogMode == 1) DarkNavyBase else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 7.dp)
                         )
                     }
                 }
 
-                if (currentUser != null && operatorProfile != null) {
+                if (dialogMode == 1) {
+                    AuthDiagnosticsPanel(
+                        report = diagnosticsReport,
+                        isArabic = isArabic,
+                        onRunDiagnostics = {
+                            copiedNotice = false
+                            authService.runAuthDiagnostics(scope, forceTokenRefresh = true)
+                        },
+                        onCopyReport = { reportText ->
+                            clipboardManager.setText(AnnotatedString(reportText))
+                            copiedNotice = true
+                        },
+                        onOpenLogin = { dialogMode = 0 }
+                    )
+
+                    if (copiedNotice) {
+                        Text(
+                            text = if (isArabic) "✓ تم نسخ تقرير التشخيص إلى الحافظة" else "✓ Diagnostic report copied to clipboard",
+                            color = EmeraldGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    // Error Banner
+                    if (authError != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = CoralRed.copy(alpha = 0.15f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CoralRed.copy(alpha = 0.6f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = authError ?: "",
+                                color = CoralRed,
+                                fontSize = 11.5.sp,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+
+                    if (currentUser != null && operatorProfile != null) {
                     // Profile Info
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -436,14 +554,9 @@ fun AuthDialog(
                         }
                     }
                 }
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(WarehouseStrings.close(isArabic), color = TextMuted)
                 }
             }
         }
     }
 }
+

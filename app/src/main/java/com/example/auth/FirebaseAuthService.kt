@@ -63,6 +63,11 @@ class FirebaseAuthService(private val context: Context) {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val diagnosticsManager = AuthGmailDiagnosticsManager(context, auth)
+    val diagnosticsReport: StateFlow<AuthDiagnosticReport> = diagnosticsManager.report
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
+
     init {
         auth.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
@@ -71,6 +76,18 @@ class FirebaseAuthService(private val context: Context) {
             if (user != null) {
                 syncOperatorPresence(user, "P7", true)
             }
+            serviceScope.launch {
+                diagnosticsManager.runFullDiagnostics(forceTokenRefresh = false)
+            }
+        }
+        serviceScope.launch {
+            diagnosticsManager.runFullDiagnostics(forceTokenRefresh = false)
+        }
+    }
+
+    fun runAuthDiagnostics(scope: CoroutineScope = serviceScope, forceTokenRefresh: Boolean = true) {
+        scope.launch {
+            diagnosticsManager.runFullDiagnostics(forceTokenRefresh = forceTokenRefresh)
         }
     }
 

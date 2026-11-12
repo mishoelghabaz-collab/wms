@@ -43,7 +43,8 @@ data class WarehouseItem(
     val warehouse: String = "WH-01",
     val reservedQuantity: Int = 0,
     val issuedQuantity: Int = 0,
-    val notes: String = ""
+    val notes: String = "",
+    val category: String = ""
 ) {
     val status: StockStatus
         get() = when {
@@ -51,6 +52,18 @@ data class WarehouseItem(
             quantity < minStockThreshold -> StockStatus.LOW_STOCK
             quantity > maxStockCapacity -> StockStatus.OVERSTOCK
             else -> StockStatus.NORMAL
+        }
+
+    val resolvedCategory: String
+        get() = if (category.isNotBlank() && category != "General") category else when {
+            name.contains("Harness", ignoreCase = true) || name.contains("ضفيرة", ignoreCase = true) || name.contains("Loom", ignoreCase = true) -> "Wiring & Harnesses"
+            name.contains("Connector", ignoreCase = true) || name.contains("Terminal", ignoreCase = true) || name.contains("كونكتور", ignoreCase = true) -> "Connectors & Terminals"
+            name.contains("Cable", ignoreCase = true) || name.contains("CAN-Bus", ignoreCase = true) || name.contains("كابل", ignoreCase = true) -> "Cables & Busses"
+            name.contains("Switch", ignoreCase = true) || name.contains("Sensor", ignoreCase = true) || name.contains("حساس", ignoreCase = true) -> "Sensors & Switches"
+            name.contains("Fuse", ignoreCase = true) || name.contains("Relay", ignoreCase = true) || name.contains("فيوز", ignoreCase = true) -> "Electrical & Relays"
+            name.contains("Battery", ignoreCase = true) || name.contains("بطارية", ignoreCase = true) -> "Power & Battery"
+            name.contains("Clip", ignoreCase = true) || name.contains("Grommet", ignoreCase = true) || name.contains("مشبك", ignoreCase = true) -> "Fasteners & Clips"
+            else -> "Hardware & Assemblies"
         }
 
     val linesDisplay: String
@@ -68,6 +81,21 @@ data class WarehouseItem(
             "غير محدد"
         }
 }
+
+fun getLocalizedCategoryName(category: String, isArabic: Boolean): String {
+    if (!isArabic) return category
+    return when (category) {
+        "Wiring & Harnesses" -> "الضفائر والأسلاك"
+        "Connectors & Terminals" -> "الموصلات والأطراف"
+        "Cables & Busses" -> "الكابلات ونواقل البيانات"
+        "Sensors & Switches" -> "الحساسات والمفاتيح"
+        "Electrical & Relays" -> "المرحلات والفيوزات"
+        "Power & Battery" -> "كابلات الطاقة والبطاريات"
+        "Fasteners & Clips" -> "المشابك والمثبتات"
+        else -> "المكونات الميكانيكية"
+    }
+}
+
 
 data class SavedFilter(
     val id: String,

@@ -314,5 +314,63 @@ class ExampleUnitTest {
         vm.setSearchQuery("")
         assertEquals("", vm.searchQuery.value)
     }
+
+    @Test
+    fun `test auth diagnostic report clipboard summary and verdict formatting`() {
+        val report = com.example.auth.AuthDiagnosticReport(
+            verdict = com.example.auth.AuthDiagnosticVerdict.PREVIEW_BYPASS_UNAUTHENTICATED,
+            checkedAt = "12:30:00",
+            isEmulator = true,
+            deviceSignature = "Google sdk_gphone64 (API 34)",
+            googlePlayServicesAvailable = false,
+            googlePlayServicesStatusText = "SERVICE_MISSING",
+            isWebClientIdConfigured = true,
+            webClientIdPreview = "197994110770-x...apps.googleusercontent.com",
+            isFirebaseSignedIn = false,
+            idTokenValid = false,
+            idTokenStatus = "MISSING (Not Signed In)",
+            gmailOAuthStatus = "INACTIVE — No authenticated session",
+            isGmailAppInstalled = false,
+            hasMailtoHandler = false,
+            isPreviewBypassActive = true,
+            summaryMessageEn = "Emulator running without login."
+        )
+
+        val summary = report.toClipboardSummary()
+        assertTrue(summary.contains("Verdict: PREVIEW_BYPASS_UNAUTHENTICATED"))
+        assertTrue(summary.contains("Preview Auth Bypass Active: true"))
+        assertTrue(summary.contains("Firebase Signed In: false"))
+        assertTrue(summary.contains("Gmail App Installed (com.google.android.gm): false"))
+        assertTrue(summary.contains("Emulator running without login."))
+    }
+
+    @Test
+    fun `test viewmodel opens auth login vs diagnostics tab properly`() {
+        val vm = WarehouseViewModel()
+        assertFalse(vm.isAuthDialogOpen.value)
+        assertFalse(vm.authDiagnosticsInitialTab.value)
+
+        vm.openAuthDiagnostics()
+        assertTrue(vm.isAuthDialogOpen.value)
+        assertTrue(vm.authDiagnosticsInitialTab.value)
+
+        vm.closeAuthDialog()
+        assertFalse(vm.isAuthDialogOpen.value)
+        assertFalse(vm.authDiagnosticsInitialTab.value)
+
+        vm.openAuthDialog()
+        assertTrue(vm.isAuthDialogOpen.value)
+        assertFalse(vm.authDiagnosticsInitialTab.value)
+    }
+
+    @Test
+    fun `test warehouse item category inference for charts`() {
+        val wireItem = com.example.model.WarehouseItem(sku = "13008512", name = "Engine Harness Wire Loom", quantity = 500, location = "A0101")
+        assertEquals("Wiring & Harnesses", wireItem.resolvedCategory)
+        assertEquals("الضفائر والأسلاك", com.example.model.getLocalizedCategoryName("Wiring & Harnesses", isArabic = true))
+
+        val terminalItem = com.example.model.WarehouseItem(sku = "13009999", name = "Gold Plated Pin Connector", quantity = 250, location = "B0201")
+        assertEquals("Connectors & Terminals", terminalItem.resolvedCategory)
+    }
 }
 

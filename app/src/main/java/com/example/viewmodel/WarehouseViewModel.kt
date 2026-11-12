@@ -176,6 +176,9 @@ class WarehouseViewModel(
     private val _isAuthDialogOpen = MutableStateFlow(false)
     val isAuthDialogOpen: StateFlow<Boolean> = _isAuthDialogOpen.asStateFlow()
 
+    private val _authDiagnosticsInitialTab = MutableStateFlow(false)
+    val authDiagnosticsInitialTab: StateFlow<Boolean> = _authDiagnosticsInitialTab.asStateFlow()
+
     private val _isGmailDispatcherOpen = MutableStateFlow(false)
     val isGmailDispatcherOpen: StateFlow<Boolean> = _isGmailDispatcherOpen.asStateFlow()
 
@@ -834,11 +837,18 @@ class WarehouseViewModel(
     }
 
     fun openAuthDialog() {
+        _authDiagnosticsInitialTab.value = false
+        _isAuthDialogOpen.value = true
+    }
+
+    fun openAuthDiagnostics() {
+        _authDiagnosticsInitialTab.value = true
         _isAuthDialogOpen.value = true
     }
 
     fun closeAuthDialog() {
         _isAuthDialogOpen.value = false
+        _authDiagnosticsInitialTab.value = false
     }
 
     fun openGmailDispatcher() {

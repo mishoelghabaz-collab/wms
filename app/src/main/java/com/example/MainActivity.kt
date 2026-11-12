@@ -153,6 +153,8 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
     val auditPhysicalCounts by viewModel.auditPhysicalCounts.collectAsStateWithLifecycle()
     val isReconciling by viewModel.isReconciling.collectAsStateWithLifecycle()
     val isGmailDispatcherOpen by viewModel.isGmailDispatcherOpen.collectAsStateWithLifecycle()
+    val authDiagnosticsInitialTab by viewModel.authDiagnosticsInitialTab.collectAsStateWithLifecycle()
+    val diagnosticsReport by authService.diagnosticsReport.collectAsStateWithLifecycle()
 
     // Show toast feedback
     LaunchedEffect(toastMessage) {
@@ -173,6 +175,7 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
                     currentPlantId = currentPlantId,
                     plants = plants,
                     currentUserRole = currentUserRole,
+                    authVerdict = diagnosticsReport.verdict,
                     onToggleLanguage = { viewModel.toggleLanguage() },
                     onToggleTheme = { viewModel.toggleDarkMode() },
                     onSelectPlant = { viewModel.switchPlant(it) },
@@ -220,7 +223,10 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
                         onExportCsv = {
                             val csv = viewModel.generateInventoryCsv()
                             shareCsvData(context, "warehouse_inventory_${currentPlantId}.csv", csv)
-                        }
+                        },
+                        authDiagnosticReport = diagnosticsReport,
+                        onRefreshAuthDiagnostics = { authService.runAuthDiagnostics(coroutineScope, forceTokenRefresh = true) },
+                        onOpenAuthDiagnostics = { viewModel.openAuthDiagnostics() }
                     )
 
                     1 -> InventoryScreen(
@@ -305,7 +311,11 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
                         onAddNewPlant = { id, en, ar -> viewModel.addNewPlant(id, en, ar) },
                         onDeletePlant = { viewModel.deletePlant(it) },
                         onUpdateUserRole = { userId, role -> viewModel.updateUserRole(userId, role) },
-                        onToggleUserLock = { viewModel.toggleUserLock(it) }
+                        onToggleUserLock = { viewModel.toggleUserLock(it) },
+                        authDiagnosticReport = diagnosticsReport,
+                        onRunAuthDiagnostics = { authService.runAuthDiagnostics(coroutineScope, forceTokenRefresh = true) },
+                        onCopyDiagnosticReport = { summary -> copyToClipboard(context, summary, isArabic) },
+                        onOpenAuthLogin = { viewModel.openAuthDialog() }
                     )
                 }
             }
@@ -407,6 +417,7 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
                 scope = coroutineScope,
                 isArabic = isArabic,
                 currentFactoryId = currentPlantId,
+                initialShowDiagnostics = authDiagnosticsInitialTab,
                 onDismiss = { viewModel.closeAuthDialog() }
             )
         }
@@ -419,6 +430,12 @@ fun WarehouseApp(viewModel: WarehouseViewModel, authService: FirebaseAuthService
                 currentFactoryName = plants.firstOrNull { it.id == currentPlantId }?.let { if (isArabic) it.nameAr else it.nameEn } ?: currentPlantId,
                 items = items,
                 operatorName = authService.operatorProfile.value?.displayName ?: "WMS Supervisor",
+                diagnosticsReport = diagnosticsReport,
+                onRefreshDiagnostics = { authService.runAuthDiagnostics(coroutineScope, forceTokenRefresh = true) },
+                onOpenAuthDiagnostics = {
+                    viewModel.closeGmailDispatcher()
+                    viewModel.openAuthDiagnostics()
+                },
                 onDismiss = { viewModel.closeGmailDispatcher() }
             )
         }

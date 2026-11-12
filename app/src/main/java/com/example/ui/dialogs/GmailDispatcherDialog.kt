@@ -23,6 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.auth.AuthDiagnosticReport
+import com.example.auth.AuthDiagnosticVerdict
 import com.example.data.WarehouseStrings
 import com.example.gmail.GmailIntegrationService
 import com.example.model.StockStatus
@@ -45,10 +48,13 @@ fun GmailDispatcherDialog(
     currentFactoryName: String,
     items: List<WarehouseItem>,
     operatorName: String = "WMS Supervisor",
+    diagnosticsReport: AuthDiagnosticReport = AuthDiagnosticReport(),
+    onRefreshDiagnostics: () -> Unit = {},
+    onOpenAuthDiagnostics: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var recipientEmail by remember { mutableStateOf(GmailIntegrationService.DEFAULT_OPERATOR_EMAIL) }
+    var recipientEmail by remember { mutableStateOf(diagnosticsReport.userEmail ?: GmailIntegrationService.DEFAULT_OPERATOR_EMAIL) }
     var selectedType by remember { mutableStateOf(EmailDispatchType.LOW_STOCK_ALERT) }
     var customSubject by remember { mutableStateOf("") }
     var customNotes by remember { mutableStateOf("") }
@@ -57,9 +63,12 @@ fun GmailDispatcherDialog(
         items.filter { it.plantId == currentFactoryId && (it.status == StockStatus.CRITICAL || it.status == StockStatus.LOW_STOCK) }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surface,
             border = androidx.compose.foundation.BorderStroke(1.5.dp, CoralRed.copy(alpha = 0.8f)),
             modifier = Modifier
@@ -69,9 +78,9 @@ fun GmailDispatcherDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Header
                 Row(
@@ -81,11 +90,11 @@ fun GmailDispatcherDialog(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
                                 .background(CoralRed.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
@@ -94,26 +103,26 @@ fun GmailDispatcherDialog(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = null,
                                 tint = CoralRed,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                         Column {
                             Text(
                                 text = if (isArabic) "مركز إرسال تقارير Gmail" else "Gmail Report Dispatcher",
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "$currentFactoryName ($currentFactoryId)",
                                 color = TextMuted,
-                                fontSize = 12.sp
+                                fontSize = 11.sp
                             )
                         }
                     }
 
-                    IconButton(onClick = onDismiss, modifier = Modifier.minTouchTarget()) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextMuted)
+                    IconButton(onClick = onDismiss, modifier = Modifier.minTouchTarget(40.dp).size(36.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextMuted, modifier = Modifier.size(18.dp))
                     }
                 }
 
@@ -254,27 +263,74 @@ fun GmailDispatcherDialog(
                     }
                 }
 
-                // Operator Signature Badge
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                // Live Gmail Auth & Token Verification Status
+                val diagColor = when (diagnosticsReport.verdict) {
+                    AuthDiagnosticVerdict.ACTIVE_GMAIL_READY -> EmeraldGreen
+                    AuthDiagnosticVerdict.FIREBASE_EMAIL_ONLY -> NeonCyanMuted
+                    AuthDiagnosticVerdict.PREVIEW_BYPASS_UNAUTHENTICATED -> AmberOrange
+                    AuthDiagnosticVerdict.AUTH_OR_ENV_FAILING -> CoralRed
+                }
+                val diagBadgeText = when (diagnosticsReport.verdict) {
+                    AuthDiagnosticVerdict.ACTIVE_GMAIL_READY -> "TOKEN ACTIVE ✓"
+                    AuthDiagnosticVerdict.FIREBASE_EMAIL_ONLY -> "EMAIL TOKEN ONLY"
+                    AuthDiagnosticVerdict.PREVIEW_BYPASS_UNAUTHENTICATED -> "NO AUTH (BYPASS)"
+                    AuthDiagnosticVerdict.AUTH_OR_ENV_FAILING -> "AUTH FAILING ✕"
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = diagColor.copy(alpha = 0.10f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, diagColor.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = if (isArabic) "المشغل الموقع: $operatorName" else "Operator: $operatorName",
-                        color = TextMuted,
-                        fontSize = 11.sp
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = EmeraldGreen.copy(alpha = 0.2f)
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (isArabic) "المشغل: $operatorName" else "Operator: $operatorName",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = diagColor.copy(alpha = 0.2f),
+                                modifier = Modifier.clickable { onRefreshDiagnostics() }
+                            ) {
+                                Text(
+                                    text = diagBadgeText,
+                                    color = diagColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "GMAIL VERIFIED",
-                            color = EmeraldGreenLight,
+                            text = "${diagnosticsReport.gmailOAuthStatus} • Gmail App: ${if (diagnosticsReport.isGmailAppInstalled) "Installed" else "Missing (Mailto Fallback)"}",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp,
+                            lineHeight = 14.sp
+                        )
+                        Text(
+                            text = if (isArabic) "عرض تقرير تشخيص Auth و Gmail الكامل ←" else "Open Full Auth/Gmail Diagnostics →",
+                            color = NeonCyan,
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier
+                                .clickable {
+                                    onDismiss()
+                                    onOpenAuthDiagnostics()
+                                }
+                                .padding(top = 2.dp)
+                                .testTag("gmail_open_diagnostics_link")
                         )
                     }
                 }

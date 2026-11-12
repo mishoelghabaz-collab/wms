@@ -19,10 +19,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.auth.AuthDiagnosticReport
 import com.example.data.WarehouseStrings
 import com.example.model.Plant
 import com.example.model.UserAccount
 import com.example.model.UserRole
+import com.example.ui.components.AuthDiagnosticsPanel
 import com.example.ui.theme.*
 
 @Composable
@@ -36,6 +38,10 @@ fun ManagementScreen(
     onDeletePlant: (String) -> Unit,
     onUpdateUserRole: (String, UserRole) -> Unit,
     onToggleUserLock: (String) -> Unit,
+    authDiagnosticReport: AuthDiagnosticReport = AuthDiagnosticReport(),
+    onRunAuthDiagnostics: () -> Unit = {},
+    onCopyDiagnosticReport: (String) -> Unit = {},
+    onOpenAuthLogin: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var newPlantCode by remember { mutableStateOf("") }
@@ -45,12 +51,12 @@ fun ManagementScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 10.dp)
             .testTag("management_screen"),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        contentPadding = PaddingValues(top = 6.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ================= SECTION 1: USERS & SCANNERS (Screenshot 6) =================
+        // ================= SECTION 0: ADMIN & AUTH DIAGNOSTICS =================
         item {
             // Root Admin Active Banner
             Surface(
@@ -62,7 +68,7 @@ fun ManagementScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -70,26 +76,37 @@ fun ManagementScreen(
                         imageVector = Icons.Default.VerifiedUser,
                         contentDescription = "Shield",
                         tint = EmeraldGreen,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = WarehouseStrings.adminRootActive(isArabic),
                         color = EmeraldGreenLight,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        // Section Title
+        // Visible Auth Status & Gmail Diagnostics Panel (Debug / Pre-Deployment Verification)
+        item {
+            AuthDiagnosticsPanel(
+                report = authDiagnosticReport,
+                isArabic = isArabic,
+                onRunDiagnostics = onRunAuthDiagnostics,
+                onCopyReport = onCopyDiagnosticReport,
+                onOpenLogin = onOpenAuthLogin
+            )
+        }
+
+        // ================= SECTION 1: USERS & SCANNERS =================
         item {
             Text(
                 text = WarehouseStrings.usersSectionTitle(isArabic),
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextWhite
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -106,8 +123,8 @@ fun ManagementScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     // Top: Actions, Role Badge, Name
                     Row(
@@ -115,8 +132,7 @@ fun ManagementScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Actions (Trash & Lock)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             IconButton(
                                 onClick = { onToggleUserLock(user.id) },
                                 modifier = Modifier.size(32.dp)
@@ -125,12 +141,11 @@ fun ManagementScreen(
                                     imageVector = if (user.isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                                     contentDescription = "Lock",
                                     tint = if (user.isLocked) CoralRed else EmeraldGreen,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(17.dp)
                                 )
                             }
                         }
 
-                        // Role Badge
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = AmberOrange.copy(alpha = 0.2f),
@@ -139,17 +154,16 @@ fun ManagementScreen(
                             Text(
                                 text = user.role.name,
                                 color = AmberOrange,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                             )
                         }
 
-                        // User Name
                         Text(
                             text = user.name,
                             color = TextWhite,
-                            fontSize = 16.sp,
+                            fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -158,16 +172,15 @@ fun ManagementScreen(
                     Text(
                         text = user.device,
                         color = TextMuted,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace
                     )
 
-                    // Role switch chips (Viewer, Supervisor, Admin)
+                    // Role switch chips (Admin, Supervisor, Viewer)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Admin
                         val isAdmin = user.role == UserRole.ADMIN
                         Surface(
                             shape = RoundedCornerShape(6.dp),
@@ -181,12 +194,11 @@ fun ManagementScreen(
                                 color = if (isAdmin) DarkNavyBase else TextWhite,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 4.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
 
-                        // Supervisor
                         val isSup = user.role == UserRole.SUPERVISOR
                         Surface(
                             shape = RoundedCornerShape(6.dp),
@@ -200,12 +212,11 @@ fun ManagementScreen(
                                 color = if (isSup) DarkNavyBase else TextWhite,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 4.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
 
-                        // Viewer
                         val isViewer = user.role == UserRole.VIEWER
                         Surface(
                             shape = RoundedCornerShape(6.dp),
@@ -219,7 +230,7 @@ fun ManagementScreen(
                                 color = if (isViewer) DarkNavyBase else TextWhite,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 4.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
@@ -228,14 +239,13 @@ fun ManagementScreen(
             }
         }
 
-        // ================= SECTION 2: DYNAMIC PLANTS MANAGEMENT (Screenshot 5) =================
+        // ================= SECTION 2: DYNAMIC PLANTS MANAGEMENT =================
         item {
-            Spacer(modifier = Modifier.height(10.dp))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(top = 4.dp, bottom = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -30,121 +30,124 @@ fun WarehouseFloatingActionBar(
     onOpenVoice: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Orange '+' Quick Add button (Min 48dp Touch Target - Principle 8 & Optical Center - Principle 2)
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = AmberOrange,
-            shadowElevation = 6.dp,
+    Column(modifier = modifier.fillMaxWidth()) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple()
-                ) { onOpenQuickAdd() }
-                .testTag("floating_quick_add_btn")
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+            // Orange '+' Quick Add button (48dp Touch Target)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = AmberOrange,
+                shadowElevation = 4.dp,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 10.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1f)
+                    .heightIn(min = 44.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple()
+                    ) { onOpenQuickAdd() }
+                    .testTag("floating_quick_add_btn")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Quick Add",
-                    tint = DarkNavyBase,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = if (isArabic) "إضافة" else "Add",
-                    color = DarkNavyBase,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Quick Add",
+                        tint = DarkNavyBase,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (isArabic) "إضافة" else "Add",
+                        color = DarkNavyBase,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
-        }
 
-        // Cyan camera scan button (Primary Action with 48dp+ touch target)
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = NeonCyanMuted,
-            shadowElevation = 6.dp,
-            modifier = Modifier
-                .weight(1.5f)
-                .heightIn(min = 48.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple()
-                ) { onOpenScanner() }
-                .testTag("floating_scanner_btn")
-        ) {
-            Row(
+            // Cyan camera scan button
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = NeonCyanMuted,
+                shadowElevation = 4.dp,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 12.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1.45f)
+                    .heightIn(min = 44.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple()
+                    ) { onOpenScanner() }
+                    .testTag("floating_scanner_btn")
             ) {
-                Icon(
-                    imageVector = Icons.Default.PhotoCamera,
-                    contentDescription = "Camera Scanner",
-                    tint = DarkNavyBase,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = if (isArabic) "مسح باركود" else "Scan SKU",
-                    color = DarkNavyBase,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = "Camera Scanner",
+                        tint = DarkNavyBase,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = if (isArabic) "مسح باركود" else "Scan SKU",
+                        color = DarkNavyBase,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 12.5.sp
+                    )
+                }
             }
-        }
 
-        // Green voice assistant button (48dp+ touch target)
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = EmeraldGreen,
-            shadowElevation = 6.dp,
-            modifier = Modifier
-                .weight(1.2f)
-                .heightIn(min = 48.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple()
-                ) { onOpenVoice() }
-                .testTag("floating_voice_btn")
-        ) {
-            Row(
+            // Green voice assistant button
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = EmeraldGreen,
+                shadowElevation = 4.dp,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 10.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1.1f)
+                    .heightIn(min = 44.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple()
+                    ) { onOpenVoice() }
+                    .testTag("floating_voice_btn")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Voice Assistant",
-                    tint = DarkNavyBase,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = if (isArabic) "صوتي" else "Voice",
-                    color = DarkNavyBase,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp, horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Voice Assistant",
+                        tint = DarkNavyBase,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (isArabic) "صوتي" else "Voice",
+                        color = DarkNavyBase,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }
@@ -163,12 +166,12 @@ fun WarehouseBottomNav(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .testTag("warehouse_bottom_nav"),
         color = MaterialTheme.colorScheme.background,
-        tonalElevation = 10.dp
+        tonalElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp, horizontal = 4.dp),
+                .padding(vertical = 3.dp, horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -186,32 +189,32 @@ fun WarehouseBottomNav(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .minTouchTarget(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple()
                         ) { onSelectTab(index) }
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                         .testTag("nav_tab_$index")
                 ) {
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(if (isSelected) AmberOrange.copy(alpha = 0.22f) else Color.Transparent)
-                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 3.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = icon,
                             contentDescription = title,
                             tint = if (isSelected) AmberOrange else TextMuted,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = title,
-                        fontSize = 10.5.sp,
+                        fontSize = 10.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) AmberOrange else TextMuted
                     )

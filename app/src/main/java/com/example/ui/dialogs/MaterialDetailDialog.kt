@@ -61,16 +61,16 @@ fun MaterialDetailDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.92f)
                 .testTag("material_details_dialog"),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surface,
             border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(12.dp)
             ) {
-                // Header Bar (Touch Target 48dp on Dismiss Button - Principle 8)
+                // Header Bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,54 +80,55 @@ fun MaterialDetailDialog(
                         Text(
                             text = WarehouseStrings.materialDetailsTitle(isArabic),
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 17.sp,
+                            fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            lineHeight = 22.sp
+                            lineHeight = 20.sp
                         )
                         Text(
                             text = "مصنع ${item.plantId} • مستودع ${item.warehouse}",
                             color = TextMuted,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
 
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .minTouchTarget()
+                            .minTouchTarget(44.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(7.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(7.dp))
 
                 // Scrollable Content with 4 Structured Sections
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
                 ) {
                     // ==========================================
                     // SECTION 1: Material Identification
                     // ==========================================
                     DetailSectionCard(title = WarehouseStrings.sectionIdentification(isArabic), icon = Icons.Default.Fingerprint) {
-                        // SKU Block with Tabular Monospace & Dedicated Copy Button (Principle 3 & 8)
+                        // SKU Block with Tabular Monospace & Dedicated Copy Button
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
-                            border = androidx.compose.foundation.BorderStroke(1.5.dp, AmberOrange),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, AmberOrange),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(14.dp),
+                                    .padding(10.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -135,33 +136,32 @@ fun MaterialDetailDialog(
                                     Text(
                                         text = if (isArabic) "كود الصنف الأساسي (SKU)" else "Master Material Code (SKU)",
                                         color = TextMuted,
-                                        fontSize = 11.sp
+                                        fontSize = 10.sp
                                     )
-                                    Spacer(modifier = Modifier.height(2.dp))
                                     TabularText(
                                         text = item.sku,
                                         color = AmberOrange,
-                                        fontSize = 22.sp,
+                                        fontSize = 19.sp,
                                         fontWeight = FontWeight.ExtraBold,
-                                        letterSpacing = 1.sp
+                                        letterSpacing = 0.8.sp
                                     )
                                 }
 
                                 Button(
                                     onClick = { onCopySku(item.sku) },
                                     colors = ButtonDefaults.buttonColors(containerColor = AmberOrange),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                                    modifier = Modifier.minTouchTarget()
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                    modifier = Modifier.minTouchTarget(40.dp)
                                 ) {
-                                    Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, tint = DarkNavyBase, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = WarehouseStrings.copySku(isArabic), color = DarkNavyBase, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, tint = DarkNavyBase, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(text = WarehouseStrings.copySku(isArabic), color = DarkNavyBase, fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         DetailRow(label = if (isArabic) "وصف الصنف" else "Description", value = item.name)
                         DetailRow(label = if (isArabic) "المصنع والمنشأة" else "Plant Facility", value = "Plant ${item.plantId}")
@@ -334,20 +334,52 @@ fun MaterialDetailDialog(
                     }
 
                     // ==========================================
-                    // SECTION 3: Inventory Information & Balances
+                    // SECTION 3: Inventory Information & Balances (Dense Metric Grid)
                     // ==========================================
                     DetailSectionCard(title = WarehouseStrings.sectionInventory(isArabic), icon = Icons.Default.Inventory2) {
-                        DetailRow(
-                            label = if (isArabic) "الرصيد الفعلي المتاح" else "Available Physical Balance",
-                            value = "${item.quantity} ${item.unit}",
-                            valueColor = AmberOrange,
-                            isTabular = true
-                        )
-                        DetailRow(label = if (isArabic) "موقع الرف التخزيني" else "Bin Location", value = item.location, isTabular = true)
-                        DetailRow(label = if (isArabic) "تقسيم الموقع" else "Zone/Aisle/Shelf/Bin", value = "Zone ${item.zone} • Aisle ${item.aisle} • Shelf ${item.shelf} • Bin ${item.bin}")
-                        DetailRow(label = if (isArabic) "حد الأمان الأدنى (Min)" else "Min Stock Threshold", value = "${item.minStockThreshold} ${item.unit}", isTabular = true)
-                        DetailRow(label = if (isArabic) "السعة القصوى (Max)" else "Max Stock Capacity", value = "${item.maxStockCapacity} ${item.unit}", isTabular = true)
-                        DetailRow(label = if (isArabic) "أيام التغطية المحسوبة" else "Stock Coverage Days", value = item.coverageDays, isTabular = true)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            CompactSpecTile(
+                                label = if (isArabic) "الرصيد المتاح" else "Available",
+                                value = "${item.quantity} ${item.unit}",
+                                valueColor = AmberOrange,
+                                modifier = Modifier.weight(1f)
+                            )
+                            CompactSpecTile(
+                                label = if (isArabic) "موقع الرف" else "Bin Loc",
+                                value = item.location,
+                                valueColor = NeonCyanMuted,
+                                modifier = Modifier.weight(1f)
+                            )
+                            CompactSpecTile(
+                                label = if (isArabic) "التغطية" else "Coverage",
+                                value = item.coverageDays,
+                                valueColor = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            CompactSpecTile(
+                                label = if (isArabic) "حد الأمان (Min)" else "Min Safety",
+                                value = "${item.minStockThreshold} ${item.unit}",
+                                valueColor = Color(0xFFFBBF24),
+                                modifier = Modifier.weight(1f)
+                            )
+                            CompactSpecTile(
+                                label = if (isArabic) "السعة القصوى" else "Max Cap",
+                                value = "${item.maxStockCapacity} ${item.unit}",
+                                valueColor = EmeraldGreen,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        DetailRow(label = if (isArabic) "تقسيم الموقع" else "Zone / Aisle / Shelf / Bin", value = "Z-${item.zone} • A-${item.aisle} • S-${item.shelf} • B-${item.bin}")
                         DetailRow(label = if (isArabic) "آخر توقيت صرف" else "Last Dispense Time", value = item.lastDispenseTime)
                         DetailRow(label = if (isArabic) "ملاحظة آخر حركة" else "Last Transaction Note", value = item.lastDispenseNote)
                     }
@@ -424,25 +456,52 @@ fun MaterialDetailDialog(
 }
 
 @Composable
+private fun CompactSpecTile(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(text = label, color = TextMuted, fontSize = 9.5.sp)
+            TabularText(
+                text = value,
+                color = valueColor,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+}
+
+@Composable
 private fun DetailSectionCard(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = icon, contentDescription = null, tint = AmberOrange, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Icon(imageVector = icon, contentDescription = null, tint = AmberOrange, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = title, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(7.dp))
             content()
         }
     }
@@ -458,26 +517,26 @@ private fun DetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 2.5.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TextMuted, fontSize = 12.sp)
+        Text(text = label, color = TextMuted, fontSize = 11.sp)
         if (isTabular) {
             TabularText(
                 text = value,
                 color = if (valueColor != Color.Unspecified) valueColor else MaterialTheme.colorScheme.onSurface,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 12.dp)
+                modifier = Modifier.padding(start = 10.dp)
             )
         } else {
             Text(
                 text = value,
                 color = if (valueColor != Color.Unspecified) valueColor else MaterialTheme.colorScheme.onSurface,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 12.dp)
+                modifier = Modifier.padding(start = 10.dp)
             )
         }
     }

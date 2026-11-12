@@ -138,6 +138,30 @@ object GmailIntegrationService {
     }
 
     /**
+     * Checks whether the official Gmail Android app is installed on this device/emulator
+     */
+    fun isGmailAppInstalled(context: Context): Boolean {
+        return try {
+            context.packageManager.getPackageInfo("com.google.android.gm", 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Checks whether any mailto: client can handle outbound reports
+     */
+    fun hasEmailHandler(context: Context): Boolean {
+        return try {
+            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+            context.packageManager.queryIntentActivities(intent, 0).isNotEmpty()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
      * Internal email launcher targeting Gmail / Email clients
      */
     private fun dispatchEmail(
@@ -153,7 +177,9 @@ object GmailIntegrationService {
                 putExtra(Intent.EXTRA_SUBJECT, subject)
                 putExtra(Intent.EXTRA_TEXT, body)
                 // Attempt to target Gmail package directly if available
-                setPackage("com.google.android.gm")
+                if (isGmailAppInstalled(context)) {
+                    setPackage("com.google.android.gm")
+                }
             }
 
             try {
@@ -170,7 +196,12 @@ object GmailIntegrationService {
                 context.startActivity(chooser)
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "فشل بدء تطبيق Gmail: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "فشل بدء تطبيق Gmail / لا يوجد تطبيق بريد مثبت في المحاكي: ${e.localizedMessage ?: e.message}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }
+
