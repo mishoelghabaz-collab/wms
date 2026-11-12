@@ -110,6 +110,109 @@ fun InventoryScreen(
         contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // 0. Real-time Search Bar (Filters by Material Name, SKU, Location, Line in real-time)
+        item {
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
+                    .testTag("inventory_search_card")
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("inventory_search_input"),
+                        placeholder = {
+                            Text(
+                                text = if (isArabic) "البحث باسم المادة أو كود الصنف SKU..."
+                                else "Search by item name or SKU...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontSize = 13.sp
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = if (isArabic) "بحث" else "Search",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(
+                                    onClick = { onSearchChange("") },
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .minTouchTarget(48.dp)
+                                        .testTag("inventory_search_clear_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = if (isArabic) "مسح البحث" else "Clear search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonCyan,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+
+                    if (searchQuery.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (isArabic) "نتائج البحث عن: \"$searchQuery\""
+                                else "Results for: \"$searchQuery\"",
+                                color = TextMuted,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = NeonCyan.copy(alpha = 0.12f),
+                                modifier = Modifier.padding(start = 6.dp)
+                            ) {
+                                Text(
+                                    text = if (isArabic) "${filteredItems.size} مادة مطابقة"
+                                    else "${filteredItems.size} items matched",
+                                    color = NeonCyan,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 1. Alert Banner
         if (alertBanner != null) {
             item {

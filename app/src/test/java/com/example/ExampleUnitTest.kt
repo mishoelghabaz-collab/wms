@@ -281,4 +281,38 @@ class ExampleUnitTest {
             assertTrue(itm.productionLines.contains("Assembly Line 9"))
         }
     }
+
+    @Test
+    fun `test real-time inventory search filtering by sku and name`() {
+        val vm = WarehouseViewModel()
+        
+        // 1. Initial query is empty
+        vm.setSearchQuery("")
+        assertEquals("", vm.searchQuery.value)
+
+        // 2. Search by SKU
+        vm.setSearchQuery("13008512")
+        assertEquals("13008512", vm.searchQuery.value)
+        val skuMatches = vm.items.value.filter {
+            it.sku.contains(vm.searchQuery.value, ignoreCase = true) ||
+            it.name.contains(vm.searchQuery.value, ignoreCase = true)
+        }
+        assertTrue(skuMatches.isNotEmpty())
+        assertTrue(skuMatches.all { it.sku.contains("13008512") || it.name.contains("13008512") })
+
+        // 3. Search by partial Name
+        vm.setSearchQuery("Bearing")
+        val nameMatches = vm.items.value.filter {
+            it.sku.contains(vm.searchQuery.value, ignoreCase = true) ||
+            it.name.contains(vm.searchQuery.value, ignoreCase = true)
+        }
+        nameMatches.forEach {
+            assertTrue(it.sku.contains("Bearing", ignoreCase = true) || it.name.contains("Bearing", ignoreCase = true))
+        }
+
+        // 4. Clear search
+        vm.setSearchQuery("")
+        assertEquals("", vm.searchQuery.value)
+    }
 }
+
