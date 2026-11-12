@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Enterprise Warehouse WMS Multi-Tenant Hierarchical Schema",
+  "entities": {
+    "factories": {
+      "collection": "factories",
+      "description": "Multi-tenant manufacturing and warehouse plant facilities",
+      "fields": {
+        "id": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "factory_items": {
+      "collection": "factories/{factoryId}/items",
+      "description": "Hierarchically isolated inventory items scoped strictly to a specific factory",
+      "fields": {
+        "sku": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "location": { "type": "string" },
+        "rackId": { "type": "string" },
+        "zone": { "type": "string" },
+        "aisle": { "type": "string" },
+        "shelf": { "type": "string" },
+        "bin": { "type": "string" },
+        "block": { "type": "string" },
+        "line": { "type": "string" },
+        "factoryId": { "type": "string" },
+        "minStockThreshold": { "type": "number" },
+        "maxStockCapacity": { "type": "number" },
+        "lastAuditTime": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "factory_lines": {
+      "collection": "factories/{factoryId}/lines",
+      "description": "Production lines strictly isolated to the parent factory",
+      "fields": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "factoryId": { "type": "string" },
+        "targetHourlyOutput": { "type": "number" },
+        "status": { "type": "string" }
+      }
+    },
+    "factory_racks": {
+      "collection": "factories/{factoryId}/racks",
+      "description": "Warehouse rack and bin storage units isolated to the parent factory",
+      "fields": {
+        "rackId": { "type": "string" },
+        "zone": { "type": "string" },
+        "aisle": { "type": "string" },
+        "shelf": { "type": "string" },
+        "maxCapacity": { "type": "number" },
+        "currentOccupancy": { "type": "number" }
+      }
+    },
+    "factory_audits": {
+      "collection": "factories/{factoryId}/audits",
+      "description": "Comprehensive stocktaking and rack-level audit reconciliation logs",
+      "fields": {
+        "auditId": { "type": "string" },
+        "factoryId": { "type": "string" },
+        "mode": { "type": "string" },
+        "rackId": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "operatorId": { "type": "string" },
+        "operatorName": { "type": "string" },
+        "totalItemsAudited": { "type": "number" },
+        "totalSystemCount": { "type": "number" },
+        "totalPhysicalCount": { "type": "number" },
+        "netVariance": { "type": "number" },
+        "itemSnapshots": { "type": "array" }
+      }
+    },
+    "items": {
+      "collection": "items",
+      "description": "Global master inventory items for cross-factory synchronization",
+      "fields": {
+        "sku": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "location": { "type": "string" },
+        "plantId": { "type": "string" }
+      }
+    },
+    "transactions": {
+      "collection": "transactions",
+      "description": "Immutable ledger of all inventory transactions and movement logs",
+      "fields": {
+        "sku": { "type": "string" },
+        "plantId": { "type": "string" },
+        "type": { "type": "string" },
+        "quantityDelta": { "type": "number" },
+        "operator": { "type": "string" },
+        "timestamp": { "type": "number" }
+      }
+    }
+  }
+}

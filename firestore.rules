@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidItem(data) {
+      return data.sku is string
+        && data.quantity is number
+        && data.location is string;
+    }
+
+    function isValidTransaction(data) {
+      return data.sku is string
+        && data.plantId is string
+        && data.type is string
+        && data.quantityDelta is number;
+    }
+
+    function isValidLine(data) {
+      return data.name is string;
+    }
+
+    function isValidRack(data) {
+      return data.rackId is string;
+    }
+
+    function isValidAudit(data) {
+      return data.factoryId is string
+        && data.mode is string
+        && data.timestamp is number
+        && data.totalItemsAudited is number;
+    }
+
+    // Top-level factory documents
+    match /factories/{factoryId} {
+      allow read: if true;
+      allow write: if true;
+
+      // Hierarchical Subcollection: Isolated Factory Items
+      match /items/{itemId} {
+        allow read: if true;
+        allow create, update: if isValidItem(request.resource.data);
+        allow delete: if resource.data.quantity <= 0;
+      }
+
+      // Hierarchical Subcollection: Isolated Factory Production Lines
+      match /lines/{lineId} {
+        allow read: if true;
+        allow write: if isValidLine(request.resource.data);
+      }
+
+      // Hierarchical Subcollection: Isolated Factory Racks
+      match /racks/{rackId} {
+        allow read: if true;
+        allow write: if isValidRack(request.resource.data);
+      }
+
+      // Hierarchical Subcollection: Stocktaking & Audit Logs
+      match /audits/{auditId} {
+        allow read: if true;
+        allow create: if isValidAudit(request.resource.data);
+        // Audits are immutable once created
+        allow update, delete: if false;
+      }
+
+      // Multi-User Concurrency: Active Terminal Operators
+      match /operators/{operatorId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Legacy / Cross-Plant Master Collections (Backward Compatibility)
+    match /items/{itemId} {
+      allow read: if true;
+      allow create, update: if isValidItem(request.resource.data);
+      allow delete: if resource.data.quantity <= 0;
+    }
+
+    match /transactions/{trxId} {
+      allow read: if true;
+      allow create: if isValidTransaction(request.resource.data);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canUndo', 'notes']);
+      allow delete: if false;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

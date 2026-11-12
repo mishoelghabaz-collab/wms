@@ -1,0 +1,6 @@
+{
+  "name": "Amazon WMS",
+  "description": "Advanced Amazon-inspired Warehouse Management System (WMS) with real-time inventory tracking, smart bin locations, camera barcode scanner, picking & packing workflows, multi-plant support, and Arabic RTL support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
